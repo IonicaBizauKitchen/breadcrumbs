@@ -5,9 +5,10 @@ module Breadcrumbs
     protected
 
     # Append a breadcrumb to the end of the trail
-    def add_breadcrumb(name, url =  nil)
+    def add_crumb(name, url = nil)
       @breadcrumbs ||= []
       url = send(url) if url.is_a?(Symbol)
+      url = polymorphic_path(url) if url.is_a?(ActiveRecord::Base) || url.is_a?(Array) # AR object or array was passed in
       name = send(name).to_s.titleize if name.is_a?(Symbol)
       @breadcrumbs << [name, url]
     end
@@ -18,9 +19,9 @@ module Breadcrumbs
 
     # Append a breadcrumb to the end of the trail by deferring evaluation 
     # until the filter processing.
-    def add_breadcrumb(name, url = nil, options = {})
+    def add_crumb(name, url = nil, options = {})
       before_filter(options) do |controller|
-        controller.send(:add_breadcrumb, name, url)
+        controller.send(:add_crumb, name, url)
       end
     end
 
@@ -30,12 +31,27 @@ module Breadcrumbs
 
     # Returns HTML markup for the breadcrumbs
     def breadcrumbs(*args)
-      default_options = {:separator => "&nbsp;&raquo;&nbsp;", :tag => :li}
+      return if @breadcrumbs.blank?
+      default_options = {:separator => "/", :wrap_separator => true}
       options = default_options.merge(args.extract_options!)
-      @breadcrumbs.map do |name, url|
-        crumb = link_to_unless_current(name, url)
-        options[:tag] && content_tag(options[:tag], crumb) || crumb
-      end.join("#{options[:separator]}")
+      
+      # Wrap separator in a list item?
+      if options[:separator] && options[:wrap_separator]
+        options[:separator] = content_tag(:li, options[:separator], :class => "separator")
+      end
+      
+      # Build an array of list items
+      items = []
+      @breadcrumbs.each do |name, url|
+        css = []
+        css << "first" if @breadcrumbs.first.first == name
+        css << "last" if @breadcrumbs.last.first == name
+        link = url.blank? ? name : link_to_unless_current(name, url) # Don't create link if URL is blank
+        items << content_tag(:li, link, :class => css.join(" "))
+        items << options[:separator] if (options[:separator] && (@breadcrumbs.last.first != name)) # No separator on the end
+      end
+
+      content_tag(:ul, items.join("\n"), :class => "breadcrumbs")
     end
 
   end
@@ -44,7 +60,7 @@ end
 
 class ActionController::Base
   include Breadcrumbs::InstanceMethods
-  helper_method :add_breadcrumb
+  helper_method :add_crumb
 end
 
 ActionController::Base.extend(Breadcrumbs::ClassMethods)
