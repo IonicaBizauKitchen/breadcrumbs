@@ -14,7 +14,7 @@ will automatically be determined by the plugin.
 == Usage
 
   class ApplicationController < ActionController::Base
-    add_breadcrumb 'Home', :root_path
+    add_crumb 'Home', :root_path
   end
 
   class ThingsController < ApplicationController
