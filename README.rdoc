@@ -7,22 +7,17 @@ will automatically be determined by the plugin.
 
 == Options
 
-* <tt>:separator</tt> - What goes between each crumb. Default to <tt>&raquo;<tt>. Set to <tt>false</tt> if you don't 
-  want separators, or if you'd prefer to create the separation using CSS techniques on <tt>ul.breadcrumbs li</tt>.
+* <tt>:separator</tt> - What goes between each crumb. Defaults to <tt>&raquo;</tt>. Set to <tt>false</tt> if you don't 
+  want separators, or if you'd prefer to create the separation using CSS techniques on <b><tt>ul.breadcrumbs li</tt></b>.
   Each separator ends up in its own <tt>li</tt> with a class of <tt>separator</tt>.
 
 == Usage
 
-  # app/controllers/application.rb
   class ApplicationController < ActionController::Base
-
     add_breadcrumb 'Home', :root_path
-
   end
 
-  # app/controllers/things_controller.rb
   class ThingsController < ApplicationController
-
     add_crumb 'Things', :things_path
     add_crumb 'Create a new thing', '', :only => [:new, :create]
     add_crumb 'Edit a thing', '', :only => [:edit, :update]
@@ -31,7 +26,6 @@ will automatically be determined by the plugin.
       @thing = Thing.find(params[:id])
       add_crumb @thing.name, @thing
     end
-
   end
 
   # app/views/layouts/application.html.haml
